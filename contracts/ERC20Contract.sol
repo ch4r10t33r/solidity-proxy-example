@@ -46,7 +46,7 @@ contract ERC20Contract is Ownable {
   function balanceOf(address _owner) constant returns (uint balance) {
     balance = balances[_owner];
   }
-  function transfer(address _to, uint _value) payable returns (bool success) {
+  function transfer(address _to, uint _value) external returns (bool success) {
     uint senderBalance = balances[msg.sender];
     if (senderBalance >= _value && _value > 0) {
         senderBalance = senderBalance.sub(_value);
@@ -57,7 +57,7 @@ contract ERC20Contract is Ownable {
     }
     return false;
   }
-  function transferFrom(address _from, address _to, uint _amount) onlyOwner returns (bool success) {
+  function transferFrom(address _from, address _to, uint _amount) external returns (bool success) {
     if(balances[_from] >= _amount
       && allowed[_from][msg.sender] >= _amount
       && _amount > 0
@@ -78,20 +78,6 @@ contract ERC20Contract is Ownable {
   }
   function allowance(address _owner, address _spender) constant returns (uint remaining) {
     return allowed[_owner][_spender];
-  }
-
-  function withdraw(uint _value) external payable returns (bool) {
-
-    if(msg.value == 0) throw;
-
-    if(balances[msg.sender] > 0 &&
-      (balances[msg.sender] + _value) > 0) {
-        if(msg.sender.send(_value)) {
-          balances[msg.sender] -= _value;
-          return true;
-        }
-      }
-      return false;
   }
 
   event Transfer(address indexed _from, address indexed _to, uint _value);

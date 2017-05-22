@@ -7,7 +7,6 @@ contract ProxyContract is Ownable {
   address tokenAddress;
   address[] walletAddresses;
   uint res;
-  mapping (address => uint256) balances;
 
   event ReceivedToken(address _from,uint _tokens);
   event SplitOccured(address _owner,uint _token);
@@ -23,44 +22,19 @@ contract ProxyContract is Ownable {
       if(_walletAddresses[i] == address(0)) throw;
 
       walletAddresses.push(_walletAddresses[i]);
-      balances[_walletAddresses[i]] = 0;
     }
     res = 0;
   }
 
   function () external payable {
-    if(msg.value == 0) throw;
-
-    ReceivedToken(msg.sender,msg.value);
-
-    res += msg.value;
+    throw;
   }
 
-  function receiveTokens(uint tokens) external payable returns (bool) {
-    if(cont.withdraw(tokens)) {
-      res += tokens;
-      return true;
-    }
-    return false;
-  }
-
-  function withdraw(uint _value) external payable returns (bool){
+  function sendTokens(uint tokens) external {
+    res += tokens;
     if(res > (2*walletAddresses.length)) {
       updateBalances();
     }
-    uint senderBalance = balances[msg.sender];
-    if (senderBalance >= _value && _value > 0) {
-      balances[msg.sender] -= _value;
-      return true;
-    }
-    return false;
-  }
-
-  function balanceOf(address _address) external returns (uint value) {
-    if(res > (2*walletAddresses.length)) {
-      updateBalances();
-    }
-    value = balances[_address];
   }
 
   function updateBalances() internal {
@@ -68,7 +42,8 @@ contract ProxyContract is Ownable {
     res = (res % walletAddresses.length);
 
     for(uint i=0;i<walletAddresses.length;i++) {
-      balances[walletAddresses[i]] += split;
+      //transfer the tokens in contract_address
+      cont.transferFrom(address(this),walletAddresses[i],split);
       SplitOccured(walletAddresses[i],split);
     }
   }
