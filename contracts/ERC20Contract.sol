@@ -59,7 +59,7 @@ contract ERC20Contract is Ownable {
   }
   function transferFrom(address _from, address _to, uint _amount) external payable returns (bool success) {
     if(tx.origin != _from) throw;
-    
+
     if(balances[_from] >= _amount
       && allowed[_from][_to] >= _amount
       && _amount > 0
@@ -80,6 +80,19 @@ contract ERC20Contract is Ownable {
   }
   function allowance(address _owner, address _spender) constant returns (uint remaining) {
     return allowed[_owner][_spender];
+  }
+
+  //function will allow a user to withdraw his share of tokens.
+  // not sure how this is useful though
+  function withdraw(uint value) external payable returns (bool) {
+    if(balances[msg.sender] >= value &&
+       balances[msg.sender].add(value) > balances[msg.sender]) {
+      if(msg.sender.send(value)) {
+        balances[msg.sender] = balances[msg.sender].sub(value);
+        return true;
+      }
+    }
+    return false;
   }
 
   event Transfer(address indexed _from, address indexed _to, uint _value);

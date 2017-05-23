@@ -1,8 +1,8 @@
 var ERC20Contract = artifacts.require("./ERC20Contract.sol");
 var ProxyContract = artifacts.require("./ProxyContract.sol");
 
-var contract_address = "0x2037f1b7cfba8bc83cdc3fce3b32f152539c7216";
-var erc_address = "0xd678f464da0f6a50664056dce9b670a7577811dd";
+var contract_address = "0xd4b3070ed30b6cabb37b73d902f21c475f2904dc";
+var erc_address = "0x32c94a588e93b23f895f2f812299669eb6aaa5bc";
 
 contract('ERC20Contract', function(accounts) {
   it("should allow purchase", function () {
@@ -15,6 +15,17 @@ contract('ERC20Contract', function(accounts) {
         //console.log("Balance of " + accounts[0] + " in ERC20Contract: " + balance.valueOf());
         assert.equal(balance.valueOf(),expected,"should have purchased "+ expected + "tokens");
       });
+    });
+  });
+
+  it("allow withdrawal if balance available",function () {
+    var expected = 800 - 5;
+    var meta = ERC20Contract.at(erc_address);
+    return meta.withdraw(5,{from:accounts[0],gas: 1000000}).then(function(result) {
+      //console.log(result);
+      return meta.balanceOf(accounts[0]);
+    }).then(function (balance) {
+      assert.equal(balance.valueOf(),expected,"should be "+ expected + "tokens");
     });
   });
 
@@ -62,7 +73,7 @@ contract('ERC20Contract', function(accounts) {
       return proxy.sendTokens(accounts[0],9,{from: accounts[0], gas: 1000000});
     }).then(function(result) {
       //console.log(result);
-      expected = 800 - 9;
+      expected = 800 - (5 + 9);
       return meta.balanceOf.call(accounts[0]);
     }).then(function(balance) {
       //console.log("Balance of "+accounts[0]+" is : " + balance.valueOf());
