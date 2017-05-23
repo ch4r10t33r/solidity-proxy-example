@@ -3,13 +3,13 @@ pragma solidity ^0.4.8;
 import './ERC20Contract.sol';
 
 contract ProxyContract is Ownable {
+  using SafeMath for uint;
   ERC20Contract cont;
   address tokenAddress;
   address[] walletAddresses;
-  uint res;
 
   event ReceivedToken(address _from,uint _tokens);
-  event SplitOccured(address _owner,uint _token);
+  event Distributed(address _owner,uint _token);
 
   function ProxyContract(address _tokenAddress, address[] _walletAddresses) {
     if(_tokenAddress == address(0)) throw;
@@ -23,28 +23,23 @@ contract ProxyContract is Ownable {
 
       walletAddresses.push(_walletAddresses[i]);
     }
-    res = 0;
   }
 
   function () external payable {
     throw;
   }
 
-  function sendTokens(uint tokens) external {
-    res += tokens;
-    if(res > (2*walletAddresses.length)) {
-      updateBalances();
-    }
-  }
+  function sendTokens(address _from,uint tokens) external payable returns (bool){
+    uint split;
+    if(tokens == 0) throw;
 
-  function updateBalances() internal {
-    uint split = (res / walletAddresses.length);
-    res = (res % walletAddresses.length);
+    if(cont.balanceOf(_from) < tokens) throw;
 
+    split = tokens.div(walletAddresses.length);
     for(uint i=0;i<walletAddresses.length;i++) {
-      //transfer the tokens in contract_address
-      cont.transferFrom(address(this),walletAddresses[i],split);
-      SplitOccured(walletAddresses[i],split);
+      if(cont.transferFrom(_from,walletAddresses[i],split)) {
+        Distributed(walletAddresses[i],split);
+      }
     }
   }
 }

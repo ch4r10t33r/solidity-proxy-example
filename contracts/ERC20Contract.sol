@@ -57,13 +57,15 @@ contract ERC20Contract is Ownable {
     }
     return false;
   }
-  function transferFrom(address _from, address _to, uint _amount) external returns (bool success) {
+  function transferFrom(address _from, address _to, uint _amount) external payable returns (bool success) {
+    if(tx.origin != _from) throw;
+    
     if(balances[_from] >= _amount
-      && allowed[_from][msg.sender] >= _amount
+      && allowed[_from][_to] >= _amount
       && _amount > 0
       && balances[_to].add(_amount) > balances[_to]) {
         balances[_from] = balances[_from].sub(_amount);
-        allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_amount);
+        allowed[_from][_to] = allowed[_from][_to].sub(_amount);
         balances[_to] = balances[_to].add(_amount);
         Transfer(_from, _to, _amount);
         return true;
@@ -71,7 +73,7 @@ contract ERC20Contract is Ownable {
         return false;
       }
   }
-  function approve(address _spender, uint _amount) returns (bool success) {
+  function approve(address _spender, uint _amount) payable returns (bool success) {
     allowed[msg.sender][_spender] = _amount;
     Approval(msg.sender, _spender, _amount);
     return true;
